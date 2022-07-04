@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boolflix</title>
+
+    <!-- font-awesome  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
+    
+    <!-- font  -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Martel+Sans&display=swap" rel="stylesheet">
+
+
+    <!-- css file  -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- axios  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"></script>
+
+    <!-- vuejs  -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.1/vue.min.js" integrity="sha512-ilCG6fVrVUku43QV/xZ0E8ur1WowVjKCXhc4y4KkQWEdU++VVm+llPwQBul3PMn84PlyXuSg070GqDf0X11Vyw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+</head>
+<body>
+    
+    <div id="root">
+        
+        <!-- HEADER  -->
+        <header>
+            <!-- logo and navbar -->
+            <div class="logo_and_navbar">
+
+                <div class="logo">
+                    <a href=""><img src="img/logo.png" alt="logo"></a>
+                </div>
+
+                <!-- navbar  -->
+                <nav>
+                    <ul class="navbar">
+                        <li><a href="">Home</a></li>
+                        <li @click="movieButton">Film</li>
+                        <li @click="tvSeriesButton">Serie TV</li>
+                    </ul>
+                </nav>
+                <!-- end navbar  -->
+            </div>
+            <!-- end logo and navbar -->
+            
+
+            <!-- search  -->
+            <div class="search-bar">
+                <input @keyup.enter="search" type="text" v-model="userInput" placeholder="cerca film o serie tv">
+                <button @click="search" class="btn">Cerca</button>
+            </div>
+            <!-- end search  -->
+        </header>
+        <!-- END HEADER  -->
+        
+        <!-- MAIN  -->
+        <main>
+            <div class="cards-container">
+
+                <!-- HOME page  -->
+                    <!-- Single-Card  -->
+                <div v-if="searchResult.length === 0" v-for="element in defaultView" class="card">
+                    <!-- cover  -->
+                    <div class="cover">
+                        <div v-if="!element.poster_path" class="empty-cover">No cover</div>
+                        <img v-else :src="'https://image.tmdb.org/t/p/w342/' + element.poster_path">
+                        
+                        <!-- layover  -->
+                        <div class="layover">
+                            <!-- titles  -->
+                            <div>
+                                <span class="red">Titolo:</span>
+                                {{ element.title || element.name}}
+                            </div>
+
+                            <div
+                            v-if="element.original_title != element.title || element.original_name != element.name">
+                               <span class="red">Titolo originale:</span>
+                               {{ element.original_title || element.original_name }}
+                            </div>
+                            <!-- end titles  -->
+            
+                            <!-- languages  -->
+                            <div class="language">
+                                <div v-if="langArray.includes(element.original_language)">
+                                    <span class="red">Lingua:</span>
+                                    <img :src="'img/' + element.original_language + '.svg'" :alt="element.original_language">
+                                </div>
+                                <div v-else><span class="red">Lingua: </span>{{element.original_language}}</div>
+                            </div>
+                            <!-- end languages  -->
+            
+                            <!-- vote  -->
+                            <div v-if="element.vote_average > 0">
+                                <span class="red">Voto: </span>
+                                <i v-for="vote in voteStars(element.vote_average)" class="fas fa-star"></i>
+                                <!-- {{ voteStars(element.vote_average) }} -->
+                            </div>
+                            <!-- end vote  -->
+
+                            <!-- overview  -->
+                            <div class="overview">
+                                <span class="red">Overview: </span>
+                                <span v-if="element.overview === ''">/</span>
+                                <span v-else> {{ element.overview }} </span>
+                            </div>
+                            <!-- end overview  -->
+                        </div>
+                        <!-- end layover  -->
+                    </div>
+                    <!-- end cover  -->
+                    
+                </div>
+                {{ getCast() }}
+                <!-- end Single-Card  -->
+                <!-- end HOME page  -->
+                
+                <!-- MOVIES and SERIES pages  -->
+                 <!-- Single-Card  -->
+                 <div v-if="defaultView.length === 0" v-for="element in moviesSeriesTabs" class="card">
+
+                    <!-- cover  -->
+                    <div class="cover">
+                        <div v-if="!element.poster_path" class="empty-cover">No cover</div>
+                        <img v-else :src="'https://image.tmdb.org/t/p/w342/' + element.poster_path">
+                        
+                        <div class="layover">
+                            <!-- titles  -->
+                            <div>
+                                <span class="red">Titolo:</span>
+                                {{ element.title || element.name}}
+                            </div>
+
+                            <div
+                            v-if="element.original_title != element.title || element.original_name != element.name">
+                               <span class="red">Titolo originale:</span>
+                               {{ element.original_title || element.original_name }}
+                            </div>
+                            <!-- end titles  -->
+            
+                            <!-- languages  -->
+                            <div class="language">
+                                <div v-if="langArray.includes(element.original_language)">
+                                    <span class="red">Lingua:</span>
+                                    <img :src="'img/' + element.original_language + '.svg'" :alt="element.original_language">
+                                </div>
+                                <div v-else><span class="red">Lingua: </span>{{element.original_language}}</div>
+                            </div>
+                            <!-- end languages  -->
+            
+                            <!-- vote  -->
+                            <div v-if="element.vote_average > 0">
+                                <span class="red">Voto: </span>
+                                <i v-for="vote in voteStars(element.vote_average)" class="fas fa-star"></i>
+                                <!-- {{ voteStars(element.vote_average) }} -->
+                            </div>
+                            <!-- end vote  -->
+
+                            <!-- overview  -->
+                            <div class="overview">
+                                <span class="red">Overview: </span>
+                                <span v-if="element.overview === ''">/</span>
+                                <span v-else> {{ element.overview }} </span>
+                            </div>
+                            <!-- end overview  -->
+                        </div>
+                    </div>
+                    <!-- end cover  -->
+                </div>
+                <!-- end Single-Card  -->
+                <!-- end MOVIES and SERIES page  -->
+
+                <!-- SEARCH view  -->
+                <!-- Single-Card  -->
+                <div v-if="moviesSeriesTabs.length === 0" v-for="element in searchResult" class="card">
+
+                    <!-- cover  -->
+                    <div class="cover">
+                        <div v-if="!element.poster_path" class="empty-cover">No cover</div>
+                        <img v-else :src="'https://image.tmdb.org/t/p/w342/' + element.poster_path">
+                        
+                        <div class="layover">
+                            <!-- titles  -->
+                            <div>
+                                <span class="red">Titolo:</span>
+                                {{ element.title || element.name}}
+                            </div>
+
+                            <div
+                            v-if="element.original_title != element.title || element.original_name != element.name">
+                               <span class="red">Titolo originale:</span>
+                               {{ element.original_title || element.original_name }}
+                            </div>
+                            <!-- end titles  -->
+            
+                            <!-- languages  -->
+                            <div class="language">
+                                <div v-if="langArray.includes(element.original_language)">
+                                    <span class="red">Lingua:</span>
+                                    <img :src="'img/' + element.original_language + '.svg'" :alt="element.original_language">
+                                </div>
+                                <div v-else><span class="red">Lingua: </span>{{element.original_language}}</div>
+                            </div>
+                            <!-- end languages  -->
+            
+                            <!-- vote  -->
+                            <div v-if="element.vote_average > 0">
+                                <span class="red">Voto: </span>
+                                <i v-for="vote in voteStars(element.vote_average)" class="fas fa-star"></i>
+                                <!-- {{ voteStars(element.vote_average) }} -->
+                            </div>
+                            <!-- end vote  -->
+
+                            <!-- overview  -->
+                            <div class="overview">
+                                <span class="red">Overview: </span>
+                                <span v-if="element.overview === ''">/</span>
+                                <span v-else> {{ element.overview }} </span>
+                            </div>
+                            <!-- end overview  -->
+                        </div>
+                    </div>
+                    <!-- end cover  -->
+                   
+                </div>
+                <!-- end Single-Card  -->
+                <!-- end SEARCH view  -->
+                
+            </div>
+        </main>
+        
+        <!-- END MAIN  -->
+    </div>
+
+    <!-- JS  -->
+    <script src="js/script.js"></script>
+</body>
+</html>
